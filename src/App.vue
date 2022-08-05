@@ -13,19 +13,19 @@
         </div>
         <div class="widget__temp-row">
           <img class="widget__temp-img" :src="`http://openweathermap.org/img/wn/${weatherData.icon}@2x.png`" :alt="`${weatherData.desc}`">
-          <div class="widget__display-temp">{{ weatherData.temp }}</div>
+          <div class="widget__display-temp">{{ weatherData.temp }}°</div>
         </div>
       </div>
       <div class="widget__weather-params">
+        <div class="widget__weather-params-item">feels like: {{ weatherData.feels_like }}°</div>
         <div class="widget__weather-params-item">
           <img class="widget__weather-img" src="./assets/drop-silhouette.png" alt="humidity">
-          <span>{{ weatherData.humidity }}</span>
+          <span>{{ weatherData.humidity }}%</span>
         </div>
         <div class="widget__weather-params-item">
           <img class="widget__weather-img" src="./assets/wind-solid.svg" alt="wind speed">
-          <span>{{ weatherData.wind }}</span>
+          <span>{{ weatherData.wind }} m/s</span>
         </div>
-        <div class="widget__weather-params-item">feels like:{{ weatherData.feels_like }}</div>
       </div>
     </div>
   </main>
@@ -92,10 +92,27 @@ export default defineComponent({
   .widget {
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
     width: 100%;
     max-width: 200px;
     margin: auto;
+    padding: 5px;
+    font-family: 'Mouse Memoirs', sans-serif;
+    color: #565656;
+    box-shadow: 1px 3px 8px 0px rgba(34, 60, 80, 0.2);
   }
+  .widget__menu,
+  .widget__temp-row,
+  .widget__weather-params {
+    display: flex;
+    flex-direction: row;
+  }
+
+  .widget__menu {
+    justify-content: space-between;
+    font-size: 22px;
+  }
+
   .widget__settings-btn {
     border: none;
     background: transparent;
@@ -107,12 +124,48 @@ export default defineComponent({
       }
     }
   }
+
+  .widget__weather-description {
+    width: 100%;
+    margin: auto;
+    text-align: center;
+  }
+
+  .widget__weather-params {
+    flex-wrap: wrap;
+  }
+
+  .widget__display-temp {
+    margin: auto;
+    font-size: 46px;
+  }
+
+  .widget__weather-params-item {
+    display: flex;
+    align-items: center;
+  }
+
+  .widget__weather-params-item:first-child {
+    width: 100%;
+    font-size: 22px;
+  }
+  .widget__weather-params-item:nth-child(2),
+  .widget__weather-params-item:nth-child(3) {
+    width: 50%;
+    font-size: 22px;
+  }
+
   .widget__weather-img,
   .widget__settings-img {
     width: 16px;
     height: 16px;
     transition: transform .4s;
   }
+
+  .widget__weather-img {
+    margin: 5px;
+  }
+
   .widget__temp-img {
     width: 100%;
     max-width: 100px;
