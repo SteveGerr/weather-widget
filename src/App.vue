@@ -1,68 +1,133 @@
 <template>
-  <main>
-    <div class="widget">
-      <div class="widget__menu">
-        <div class="widget__city">{{ weatherData.name }}, {{ weatherData.country }}</div>
-        <button class="widget__settings-btn">
-          <img class="widget__settings-img" src="./assets/gear-solid.svg" alt="gear">
-        </button>
-      </div>
-      <div class="widget__temp">
-        <div class="widget__temp-row">
-          <div class="widget__weather-description">{{ weatherData.desc }}</div>
-        </div>
-        <div class="widget__temp-row">
-          <img class="widget__temp-img" :src="`http://openweathermap.org/img/wn/${weatherData.icon}@2x.png`" :alt="`${weatherData.desc}`">
-          <div class="widget__display-temp">{{ weatherData.temp }}°</div>
-        </div>
-      </div>
-      <div class="widget__weather-params">
-        <div class="widget__weather-params-item">feels like: {{ weatherData.feels_like }}°</div>
-        <div class="widget__weather-params-item">
-          <img class="widget__weather-img" src="./assets/drop-silhouette.png" alt="humidity">
-          <span>{{ weatherData.humidity }}%</span>
-        </div>
-        <div class="widget__weather-params-item">
-          <img class="widget__weather-img" src="./assets/wind-solid.svg" alt="wind speed">
-          <span>{{ weatherData.wind }} m/s</span>
-        </div>
-      </div>
-    </div>
-  </main>
+  <button @click="show = !show">Toggle</button>
+  <template v-if="show">
+    <Widget
+      :cities="cities"
+      @showWidget="showWidget"
+    />
+  </template>
+  <template v-else>
+    <WidgetSettings
+      :cities="getCities"
+      @addCity="addCity"
+      @removeCity="deleteCity"
+      @dragCities="(val:any) => cities = val"
+    />
+  </template>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted } from 'vue';
-import { weatherData as wd } from "./interfaces/weatherI"
+import { defineComponent, ref, onMounted, computed, getCurrentInstance   } from 'vue';
+import { weatherData as wd} from "./interfaces/weatherI"
+import Widget from './components/Widget.vue';
+import WidgetSettings from './components/WidgetSettings.vue';
 
 export default defineComponent({
   name: 'App',
 
   components: {
+    Widget,
+    WidgetSettings
+  },
+
+  data: () =>  {
+    return ({
+      show: true
+    });
+  },
+
+  methods: {
+    showWidget() {
+      this.show = !this.show
+    }
   },
 
   setup() {
 
     const API_key = "74c12883141c83cfc50a2134a0fbba7a"
     const BASE_URL = 'https://api.openweathermap.org/data/2.5/'
-    let city = ref("")
+    const ls = window.localStorage
+    const city = ref("")
+    let widgetShow = ref(true)
+    const cities = ref([] as wd[])
+    let urlQuery = ls.getItem("userCoord")
+    let getDataURL = `${BASE_URL}weather?q=${ urlQuery }&units=metric&appid=${API_key}`
+    const addedCity = ref("")
+    const instance = getCurrentInstance()
 
     /** All data */
     let weatherData = ref({} as wd)
 
     onMounted(() => {
-      getData()
+      checkCoords()
+      getWData()
     })
+
+
+    const getWData = () => {
+      if (!JSON.parse(ls.getItem("wData") || "")) {
+        cities.value = []
+        return
+      }
+      getData()
+    }
+
+    const widgetVisibleToggler = () => widgetShow.value = false
+    const settingsVisibleToggler = () => widgetShow.value = true
+
+    const getCoords = () => {
+      const success = (d: any) => {
+
+        const lat = d.coords.latitude
+        const long = d.coords.longitude
+
+        const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${long}`
+
+        fetch(url)
+          .then(res => res.json())
+          .then(data => {
+            ls.setItem("userCoord", data.city || data["localityInfo"]["administrative"][2].name)
+            let uc = ls.getItem("userCoord") || ""
+            city.value = uc
+            getData()
+          })
+          .catch(error => console.error(error))
+      }
+
+
+      const error = () => {
+        console.log("Get coords error");
+      }
+
+      navigator.geolocation.getCurrentPosition(success, error)
+
+    }
+
+
+    const getData = () => fetch(getDataURL)
+      .then(res => res.json())
+      .then(setData)
+      .catch(error => console.error(error))
+
+    const checkCoords = () => {
+      const coords = ls.getItem("userCoord")
+      if (coords) {
+        city.value = coords
+      } else {
+        getCoords()
+      }
+    }
 
     const isData = (data: any) => data ? true : false
 
     const setData = (data: any) => {
       if (!isData(data)) return
-      console.log(data);
-      const {name, sys, main, wind: {speed}, weather} = data
+
+      const {name, sys, main, wind: {speed}, weather, id} = data
 
       weatherData.value = {
-        name,
+        id,
+        city: name,
         country: sys.country,
         feels_like: Math.round(main.feels_like),
         humidity: Math.round(main.humidity),
@@ -72,16 +137,77 @@ export default defineComponent({
         icon: weather[0].icon,
         desc: weather[0].description
       }
+      if (JSON.parse(ls.getItem("wData") || "" )?.length) {
+        cities.value = [...JSON.parse(ls.getItem("wData") || "")]
+      } else {
+        ls.setItem("wData", JSON.stringify([weatherData.value]))
+        cities.value = [...JSON.parse(ls.getItem("wData") || "")]
+      }
     }
 
-    const getData = () => fetch(`${BASE_URL}weather?q=${city.value || 'Samara'}&units=metric&appid=${API_key}`)
-        .then(res => res.json())
-        .then(setData)
-        .catch(error => console.error(error))
+    const setUpdateData = (data: any) => {
+      if (!isData(data)) return
+
+      const {name, sys, main, wind: {speed}, weather, id} = data
+
+      // Check city clone
+      if (getCities.value.find(c => c.id === id)) return
+
+      weatherData.value = {
+        id,
+        city: name,
+        country: sys.country,
+        feels_like: Math.round(main.feels_like),
+        humidity: Math.round(main.humidity),
+        pressure: main.pressure,
+        temp: Math.round(main.temp),
+        wind: Math.round(speed),
+        icon: weather[0].icon,
+        desc: weather[0].description
+      }
+
+      let arr =  [...JSON.parse(ls.getItem("wData") || "")]
+      arr.push(weatherData.value)
+      ls.setItem("wData", JSON.stringify(arr))
+      getWData()
+    }
+
+    const updateData = () => fetch(`${BASE_URL}weather?q=${addedCity.value}&units=metric&appid=${API_key}`)
+      .then(res => res.json())
+      .then(setUpdateData)
+      .catch(error => console.error(error))
+
+    const addCity = (e:string) => {
+      if (!e) return
+      addedCity.value = e
+      updateData()
+    }
+
+    const deleteCity = (id: number) => {
+      cities.value = cities.value.filter((c) => c.id !== id)
+      ls.setItem("wData", JSON.stringify(getCities.value))
+    }
+
+    const getCities = computed({
+      get: () => cities.value,
+      set: (val) => {
+        cities.value = [...val]
+        ls.setItem("wData", JSON.stringify(cities.value))
+      }
+    })
 
     return {
+      city,
+      cities,
+      addCity,
       getData,
-      weatherData,
+      instance,
+      getCities,
+      addedCity,
+      widgetShow,
+      deleteCity,
+      widgetVisibleToggler,
+      settingsVisibleToggler
     }
   },
 
@@ -89,7 +215,8 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
-  .widget {
+  .widget,
+  .widget__settings {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -113,10 +240,20 @@ export default defineComponent({
     font-size: 22px;
   }
 
-  .widget__settings-btn {
+  .widget__settings-btn,
+  .widget__settings-close,
+  .widget__settings-add-btn,
+  .widget__settings-city-remove {
     border: none;
     background: transparent;
     cursor: pointer;
+    &:active {
+      transform: scale(.8);
+    }
+
+  }
+
+  .widget__settings-btn {
     &:hover {
       .widget__settings-img {
         transform: rotate(45deg);
@@ -170,5 +307,50 @@ export default defineComponent({
     width: 100%;
     max-width: 100px;
     max-height: 100px;
+    object-fit: cover;
+  }
+
+  // widget-settings
+  .widget__settings {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .widget__settings-header{
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .widget__settings-city-list {
+    padding-left: 0;
+  }
+
+  .widget__settings-city-item {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .widget__settings-add-city {
+    display: flex;
+    align-items: flex-end;
+    margin: 10px 0 0 0;
+    input {
+      max-width: 150px;
+      max-height: 20px;
+      margin-top: 5px;
+    }
+    label {
+      margin-bottom: 5px;
+    }
+  }
+
+  .widget__settings-close img,
+  .widget__settings-city-remove img {
+    width: 20px;
+    pointer-events: none;
+  }
+
+  .widget__settings-burger {
+    cursor: move;
   }
 </style>
