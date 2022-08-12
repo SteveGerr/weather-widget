@@ -1,7 +1,7 @@
 <template>
   <template v-if="widgetShow">
     <Widget
-      :cities="cities"
+      :cities="getCities"
       @showWidget="widgetVisibleToggler"
     />
   </template>
@@ -51,8 +51,11 @@ export default defineComponent({
       getWData()
     })
 
+    const widgetVisibleToggler = () => widgetShow.value = !widgetShow.value
 
     const getWData = () => {
+      console.log(JSON.parse(ls.getItem("wData") || ""));
+
       if (!JSON.parse(ls.getItem("wData") || "")) {
         cities.value = []
         return
@@ -60,7 +63,6 @@ export default defineComponent({
       getData()
     }
 
-    const widgetVisibleToggler = () => widgetShow.value = !widgetShow.value
 
     const getCoords = () => {
       const success = (d: any) => {
@@ -81,7 +83,6 @@ export default defineComponent({
           .catch(error => console.error(error))
       }
 
-
       const error = () => {
         console.log("Get coords error");
       }
@@ -101,6 +102,8 @@ export default defineComponent({
       if (coords) {
         city.value = coords
       } else {
+        console.log(city.value);
+
         getCoords()
       }
     }
