@@ -1,9 +1,8 @@
 <template>
-  <button @click="show = !show">Toggle</button>
-  <template v-if="show">
+  <template v-if="widgetShow">
     <Widget
       :cities="cities"
-      @showWidget="showWidget"
+      @showWidget="widgetVisibleToggler"
     />
   </template>
   <template v-else>
@@ -12,6 +11,7 @@
       @addCity="addCity"
       @removeCity="deleteCity"
       @dragCities="(val:any) => cities = val"
+      @showWidgetSettings="widgetVisibleToggler"
     />
   </template>
 </template>
@@ -28,18 +28,6 @@ export default defineComponent({
   components: {
     Widget,
     WidgetSettings
-  },
-
-  data: () =>  {
-    return ({
-      show: true
-    });
-  },
-
-  methods: {
-    showWidget() {
-      this.show = !this.show
-    }
   },
 
   setup() {
@@ -72,8 +60,7 @@ export default defineComponent({
       getData()
     }
 
-    const widgetVisibleToggler = () => widgetShow.value = false
-    const settingsVisibleToggler = () => widgetShow.value = true
+    const widgetVisibleToggler = () => widgetShow.value = !widgetShow.value
 
     const getCoords = () => {
       const success = (d: any) => {
@@ -206,8 +193,7 @@ export default defineComponent({
       addedCity,
       widgetShow,
       deleteCity,
-      widgetVisibleToggler,
-      settingsVisibleToggler
+      widgetVisibleToggler
     }
   },
 

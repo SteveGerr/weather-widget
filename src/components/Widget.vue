@@ -53,10 +53,8 @@ export default defineComponent({
 
     emits: ["showWidget"],
 
-    setup(props, { emit }:any) {
+    setup() {
         const getIconSrc = (iconCode: string) => `http://openweathermap.org/img/wn/${iconCode}@2x.png`
-
-        emit('showWidget')
 
         return {
             getIconSrc,
