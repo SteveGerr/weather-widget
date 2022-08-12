@@ -8,7 +8,7 @@
       </div>
 
         <!-- eslint-disable-next-line vue/no-mutating-props -->
-        <draggable v-model="getCities">
+        <draggable v-model="getCities" item-key="id">
           <template class="widget__settings-city-list" #item="{ element }">
             <li
               class="widget__settings-city-item"
