@@ -7,7 +7,6 @@
         </button>
       </div>
 
-        <!-- eslint-disable-next-line vue/no-mutating-props -->
         <draggable v-model="getCities" item-key="id">
           <template class="widget__settings-city-list" #item="{ element }">
             <li
@@ -81,6 +80,48 @@ export default defineComponent({
 })
 </script>
 
-<style>
+<style lang="scss">
+  .widget__settings {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .widget__settings-header{
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .widget__settings-city-list {
+    padding-left: 0;
+  }
+
+  .widget__settings-city-item {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .widget__settings-add-city {
+    display: flex;
+    align-items: flex-end;
+    margin: 10px 0 0 0;
+    input {
+      max-width: 150px;
+      max-height: 20px;
+      margin-top: 5px;
+    }
+    label {
+      margin-bottom: 5px;
+    }
+  }
+
+  .widget__settings-close img,
+  .widget__settings-city-remove img {
+    width: 20px;
+    pointer-events: none;
+  }
+
+  .widget__settings-burger {
+    cursor: move;
+  }
 
 </style>
