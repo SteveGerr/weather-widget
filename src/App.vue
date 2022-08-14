@@ -14,10 +14,11 @@
       @showWidgetSettings="widgetVisibleToggler"
     />
   </template>
+  <p v-if="!getCities">Getting data...</p>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, computed, getCurrentInstance   } from 'vue';
+import { defineComponent, ref, onMounted, computed } from 'vue';
 import { weatherData as wd} from "./interfaces/weatherI"
 import Widget from './components/Widget.vue';
 import WidgetSettings from './components/WidgetSettings.vue';
@@ -38,10 +39,7 @@ export default defineComponent({
     const city = ref("")
     let widgetShow = ref(true)
     const cities = ref([] as wd[])
-    let urlQuery = ls.getItem("userCoord")
-    let getDataURL = `${BASE_URL}weather?q=${ urlQuery }&units=metric&appid=${API_key}`
     const addedCity = ref("")
-    const instance = getCurrentInstance()
 
     /** All data */
     let weatherData = ref({} as wd)
@@ -49,6 +47,8 @@ export default defineComponent({
     onMounted(() => {
       checkCoords()
     })
+
+    const getDataURL = (query:string) => `${BASE_URL}weather?q=${ query }&units=metric&appid=${API_key}`
 
     const widgetVisibleToggler = () => widgetShow.value = !widgetShow.value
 
@@ -67,8 +67,8 @@ export default defineComponent({
             ls.setItem("userCoord", data.city || data["localityInfo"]["administrative"][2].name)
             let uc = ls.getItem("userCoord") || ""
             city.value = uc
-            let getDataURL = `${BASE_URL}weather?q=${ uc }&units=metric&appid=${API_key}`
-            getData(getDataURL)
+            let URL = `${BASE_URL}weather?q=${ uc }&units=metric&appid=${API_key}`
+            getData(URL)
           })
           .catch(error => console.error(error))
       }
@@ -91,7 +91,7 @@ export default defineComponent({
       const coords = ls.getItem("userCoord")
       if (coords) {
         city.value = coords
-        getData(getDataURL)
+        getData(getDataURL(coords))
       } else {
         getCoords()
       }
@@ -148,18 +148,17 @@ export default defineComponent({
       let arr =  [...JSON.parse(ls.getItem("wData") || "")]
       arr.push(weatherData.value)
       ls.setItem("wData", JSON.stringify(arr))
-      getData(getDataURL)
+      getData(getDataURL(name))
     }
 
-    const updateData = () => fetch(`${BASE_URL}weather?q=${addedCity.value}&units=metric&appid=${API_key}`)
+    const updateData = (url:string) => fetch(url)
       .then(res => res.json())
       .then(setUpdateData)
       .catch(error => console.error(error))
 
     const addCity = (e:string) => {
       if (!e) return
-      addedCity.value = e
-      updateData()
+      updateData(getDataURL(e))
     }
 
     const deleteCity = (id: number) => {
@@ -180,10 +179,10 @@ export default defineComponent({
       cities,
       addCity,
       getData,
-      instance,
       getCities,
       addedCity,
       widgetShow,
+      getDataURL,
       deleteCity,
       widgetVisibleToggler
     }
