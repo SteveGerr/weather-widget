@@ -48,20 +48,9 @@ export default defineComponent({
 
     onMounted(() => {
       checkCoords()
-      getWData()
     })
 
     const widgetVisibleToggler = () => widgetShow.value = !widgetShow.value
-
-    const getWData = () => {
-      console.log(JSON.parse(ls.getItem("wData") || ""));
-
-      if (!JSON.parse(ls.getItem("wData") || "")) {
-        cities.value = []
-        return
-      }
-      getData()
-    }
 
 
     const getCoords = () => {
@@ -78,7 +67,8 @@ export default defineComponent({
             ls.setItem("userCoord", data.city || data["localityInfo"]["administrative"][2].name)
             let uc = ls.getItem("userCoord") || ""
             city.value = uc
-            getData()
+            let getDataURL = `${BASE_URL}weather?q=${ uc }&units=metric&appid=${API_key}`
+            getData(getDataURL)
           })
           .catch(error => console.error(error))
       }
@@ -92,7 +82,7 @@ export default defineComponent({
     }
 
 
-    const getData = () => fetch(getDataURL)
+    const getData = (url:string) => fetch(url)
       .then(res => res.json())
       .then(setData)
       .catch(error => console.error(error))
@@ -101,9 +91,8 @@ export default defineComponent({
       const coords = ls.getItem("userCoord")
       if (coords) {
         city.value = coords
+        getData(getDataURL)
       } else {
-        console.log(city.value);
-
         getCoords()
       }
     }
@@ -127,7 +116,7 @@ export default defineComponent({
         icon: weather[0].icon,
         desc: weather[0].description
       }
-      if (JSON.parse(ls.getItem("wData") || "" )?.length) {
+      if (ls.getItem("wData") !== null) {
         cities.value = [...JSON.parse(ls.getItem("wData") || "")]
       } else {
         ls.setItem("wData", JSON.stringify([weatherData.value]))
@@ -159,7 +148,7 @@ export default defineComponent({
       let arr =  [...JSON.parse(ls.getItem("wData") || "")]
       arr.push(weatherData.value)
       ls.setItem("wData", JSON.stringify(arr))
-      getWData()
+      getData(getDataURL)
     }
 
     const updateData = () => fetch(`${BASE_URL}weather?q=${addedCity.value}&units=metric&appid=${API_key}`)
