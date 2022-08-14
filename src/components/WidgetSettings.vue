@@ -24,11 +24,13 @@
         </draggable>
 
       <div class="widget__settings-add-city">
-        <label for="add">Add city
-
+        <label for="add">
+          Add city
           <input name="add" v-model="cityAdded" type="text">
         </label>
-        <button class="widget__settings-add-btn" @click="$emit('addCity', cityAdded)"><img src="../assets/enter.png" alt="add city"></button>
+        <button class="widget__settings-add-btn" @click="$emit('addCity', cityAdded)">
+          <img src="../assets/enter.png" alt="add city">
+        </button>
       </div>
     </div>
 
