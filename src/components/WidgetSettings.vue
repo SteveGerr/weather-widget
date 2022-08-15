@@ -26,7 +26,11 @@
       <div class="widget__settings-add-city">
         <label for="add">
           Add city
-          <input name="add" v-model="cityAdded" type="text">
+          <input
+            name="add"
+            v-model="cityAdded"
+            @keyup.enter="emitCityName"
+            type="text">
         </label>
         <button class="widget__settings-add-btn" @click="emitCityName">
           <img src="../assets/enter.png" alt="add city">
