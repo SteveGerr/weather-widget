@@ -28,7 +28,7 @@
           Add city
           <input name="add" v-model="cityAdded" type="text">
         </label>
-        <button class="widget__settings-add-btn" @click="$emit('addCity', cityAdded)">
+        <button class="widget__settings-add-btn" @click="emitCityName">
           <img src="../assets/enter.png" alt="add city">
         </button>
       </div>
@@ -63,6 +63,11 @@ export default defineComponent({
 
     const getIconSrc = (iconCode: string) => `http://openweathermap.org/img/wn/${iconCode}@2x.png`
 
+    const emitCityName = () => {
+      emit('addCity', cityAdded.value)
+      cityAdded.value = ""
+    }
+
     const getCities = computed({
       get: () => props.cities,
       set: (val) => {
@@ -75,7 +80,8 @@ export default defineComponent({
     return {
       getCities,
       cityAdded,
-      getIconSrc
+      getIconSrc,
+      emitCityName
     }
   }
 
