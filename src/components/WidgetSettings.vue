@@ -110,6 +110,21 @@ export default defineComponent({
   .widget__settings-city-item {
     display: flex;
     justify-content: space-between;
+    &:first-child {
+      .widget__settings-city-name {
+        &:after {
+          content: '';
+          display: inline-flex;
+          width: 16px;
+          height: 16px;
+          position: relative;
+          top: 3px;
+          left: 5px;
+          background: url("../assets/view.png");
+        }
+      }
+    }
+
   }
 
   .widget__settings-add-city {
