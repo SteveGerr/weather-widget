@@ -1,25 +1,27 @@
 <template>
-  <template v-if="widgetShow">
-    <Widget
-      :cities="getCities"
-      @showWidget="widgetVisibleToggler"
-    />
-  </template>
-  <template v-else>
-    <WidgetSettings
-      :cities="getCities"
-      @addCity="addCity"
-      @removeCity="deleteCity"
-      @dragCities="(val = []) => cities = val"
-      @showWidgetSettings="widgetVisibleToggler"
-    />
-  </template>
-  <p v-if="!getCities">Getting data...</p>
+  <div v-if="compCoords">
+    <template v-if="widgetShow">
+      <Widget
+        :cities="getCities"
+        @showWidget="widgetVisibleToggler"
+      />
+    </template>
+    <template v-else>
+      <WidgetSettings
+        :cities="getCities"
+        @addCity="addCity"
+        @removeCity="deleteCity"
+        @dragCities="(val = []) => getCities = val"
+        @showWidgetSettings="widgetVisibleToggler"
+      />
+    </template>
+  </div>
+  <p class="widget__warning" v-else>Your geolocation is blocked or no data! Please, unblock geolocation and refresh the page!</p>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, computed } from 'vue';
-import { weatherData as wd} from "./interfaces/weatherI"
+import { useDataURL, useData, useCoords } from './main'
+import { defineComponent, ref, onMounted, computed} from 'vue';
 import Widget from './components/Widget.vue';
 import WidgetSettings from './components/WidgetSettings.vue';
 
@@ -33,132 +35,41 @@ export default defineComponent({
 
   setup() {
 
-    const API_key = "74c12883141c83cfc50a2134a0fbba7a"
-    const BASE_URL = 'https://api.openweathermap.org/data/2.5/'
+    const { city, getCoords, BASE_URL, API_key, ls: lsCoords} = useCoords()
+    const { getDataURL } = useDataURL()
+    const { cities, getData, setUpdateData } = useData()
+
     const ls = window.localStorage
-    const city = ref("")
+    const isCoords = ref(lsCoords.getItem("userCoord"))
     let widgetShow = ref(true)
-    const cities = ref([] as wd[])
     const addedCity = ref("")
 
-    /** All data */
-    let weatherData = ref({} as wd)
-
     onMounted(() => {
+      isCoords.value = lsCoords.getItem("userCoord")
       checkCoords()
     })
 
-    const getDataURL = (query:string) => `${BASE_URL}weather?q=${ query }&units=metric&appid=${API_key}`
-
     const widgetVisibleToggler = () => widgetShow.value = !widgetShow.value
 
-
-    const getCoords = () => {
-      const success = (d: any) => {
-
-        const lat = d.coords.latitude
-        const long = d.coords.longitude
-
-        const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${long}`
-
-        fetch(url)
-          .then(res => res.json())
-          .then(data => {
-            ls.setItem("userCoord", data.city || data["localityInfo"]["administrative"][2].name)
-            let uc = ls.getItem("userCoord") || ""
-            city.value = uc
-            let URL = `${BASE_URL}weather?q=${ uc }&units=metric&appid=${API_key}`
-            getData(URL)
-          })
-          .catch(error => console.error(error))
-      }
-
-      const error = () => {
-        console.log("Get coords error");
-      }
-
-      navigator.geolocation.getCurrentPosition(success, error)
-
-    }
-
-
-    const getData = (url:string) => fetch(url)
-      .then(res => res.json())
-      .then(setData)
-      .catch(error => console.error(error))
-
     const checkCoords = () => {
-      const coords = ls.getItem("userCoord")
-      if (coords) {
-        city.value = coords
-        getData(getDataURL(coords))
+      // let coords = ls.getItem("userCoord")
+      if (isCoords.value !== null) {
+        city.value = isCoords.value
+        getData(getDataURL(BASE_URL, isCoords.value, API_key))
       } else {
         getCoords()
+        isCoords.value = lsCoords.getItem("userCoord")
       }
-    }
-
-    const isData = (data: any) => data ? true : false
-
-    const setData = (data: any) => {
-      if (!isData(data)) return
-
-      const {name, sys, main, wind: {speed}, weather, id} = data
-
-      weatherData.value = {
-        id,
-        city: name,
-        country: sys.country,
-        feels_like: Math.round(main.feels_like),
-        humidity: Math.round(main.humidity),
-        pressure: main.pressure,
-        temp: Math.round(main.temp),
-        wind: Math.round(speed),
-        icon: weather[0].icon,
-        desc: weather[0].description
-      }
-      if (ls.getItem("wData") !== null) {
-        cities.value = [...JSON.parse(ls.getItem("wData") || "")]
-      } else {
-        ls.setItem("wData", JSON.stringify([weatherData.value]))
-        cities.value = [...JSON.parse(ls.getItem("wData") || "")]
-      }
-    }
-
-    const setUpdateData = (data: any) => {
-      if (!isData(data)) return
-
-      const {name, sys, main, wind: {speed}, weather, id} = data
-
-      // Check city clone
-      if (getCities.value.find(c => c.id === id)) return
-
-      weatherData.value = {
-        id,
-        city: name,
-        country: sys.country,
-        feels_like: Math.round(main.feels_like),
-        humidity: Math.round(main.humidity),
-        pressure: main.pressure,
-        temp: Math.round(main.temp),
-        wind: Math.round(speed),
-        icon: weather[0].icon,
-        desc: weather[0].description
-      }
-
-      let arr =  [...JSON.parse(ls.getItem("wData") || "")]
-      arr.push(weatherData.value)
-      ls.setItem("wData", JSON.stringify(arr))
-      getData(getDataURL(name))
     }
 
     const updateData = (url:string) => fetch(url)
       .then(res => res.json())
-      .then(setUpdateData)
+      .then(res => setUpdateData(res, cities.value))
       .catch(error => console.error(error))
 
     const addCity = (e:string) => {
       if (!e) return
-      updateData(getDataURL(e))
+      updateData(getDataURL(BASE_URL, e, API_key))
     }
 
     const deleteCity = (id: number) => {
@@ -174,17 +85,21 @@ export default defineComponent({
       }
     })
 
+    const compCoords = computed({
+      get: () => isCoords.value,
+      set: (val) => isCoords.value = val
+    })
+
     return {
-      city,
-      cities,
       addCity,
-      getData,
       getCities,
       addedCity,
+      compCoords,
       widgetShow,
-      getDataURL,
       deleteCity,
-      widgetVisibleToggler
+      widgetVisibleToggler,
+      ...useCoords(),
+      ...useData()
     }
   },
 
@@ -204,5 +119,10 @@ export default defineComponent({
     font-family: 'Mouse Memoirs', sans-serif;
     color: #565656;
     box-shadow: 1px 3px 8px 0px rgba(34, 60, 80, 0.2);
+  }
+  .widget__warning {
+    font-size: 30px;
+    font-weight: 600;
+    text-align: center;
   }
 </style>
