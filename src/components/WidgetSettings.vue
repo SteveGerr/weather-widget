@@ -93,9 +93,10 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
+  @import "../scssMixins/mixins.scss";
+
   .widget__settings {
-    display: flex;
-    flex-direction: column;
+    @include baseFlex(flex, column)
   }
 
   .widget__settings-header{

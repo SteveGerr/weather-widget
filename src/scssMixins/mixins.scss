@@ -1,0 +1,9 @@
+@mixin baseFlex($display, $dir) {
+    display: $display;
+    flex-direction: $dir;
+}
+
+@mixin paramsItem($width, $fz) {
+    width: $width;
+    font-size: $fz;
+}

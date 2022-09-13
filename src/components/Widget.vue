@@ -64,10 +64,9 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
+    @import "../scssMixins/mixins.scss";
 
     .widget {
-        display: flex;
-        flex-direction: column;
         justify-content: space-between;
         width: 100%;
         max-width: 200px;
@@ -77,11 +76,11 @@ export default defineComponent({
         color: #565656;
         box-shadow: 1px 3px 8px 0px rgba(34, 60, 80, 0.2);
     }
+    .widget,
     .widget__menu,
     .widget__temp-row,
     .widget__weather-params {
-        display: flex;
-        flex-direction: row;
+        @include baseFlex(flex, row)
     }
 
     .widget__menu {
@@ -132,13 +131,11 @@ export default defineComponent({
     }
 
     .widget__weather-params-item:first-child {
-        width: 100%;
-        font-size: 22px;
+        @include paramsItem(100%, 22px);
     }
     .widget__weather-params-item:nth-child(2),
     .widget__weather-params-item:nth-child(3) {
-        width: 50%;
-        font-size: 22px;
+        @include paramsItem(50%, 22px);
     }
 
     .widget__weather-img,
