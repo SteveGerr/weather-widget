@@ -1,37 +1,36 @@
 <template>
     <div class="widget">
-      <template v-for="city in cities.filter((c, i) => i === 0)" :key="city.id">
+        <div class="widget__container" v-for="city in cities.filter((c, i) => i === 0)" :key="city.id">
 
-        <div class="widget__menu">
-          <div class="widget__city"><span class="widget__city-name">{{ city.city }}</span>, {{ city.country }}</div>
-          <button class="widget__settings-btn" @click="$emit('showWidget')">
-            <img class="widget__settings-img" src="../assets/gear-solid.svg" alt="gear">
-          </button>
+            <div class="widget__menu">
+            <div class="widget__city"><span class="widget__city-name">{{ city.city }}</span>, {{ city.country }}</div>
+            <button class="widget__settings-btn" @click="$emit('showWidget')">
+                <img class="widget__settings-img" src="../assets/gear-solid.svg" alt="gear">
+            </button>
+            </div>
+
+            <div class="widget__temp">
+                <div class="widget__temp-row">
+                    <div class="widget__weather-description">{{ city.desc }}</div>
+                </div>
+                <div class="widget__temp-row">
+                    <img class="widget__temp-img" :src="getIconSrc(city.icon)" :alt="`${city.desc}`">
+                    <div class="widget__display-temp">{{ city.temp }}°</div>
+                </div>
+            </div>
+
+            <div class="widget__weather-params">
+                <div class="widget__weather-params-item">feels like: {{ city.feels_like }}°</div>
+                <div class="widget__weather-params-item">
+                    <img class="widget__weather-img" src="../assets/drop-silhouette.png" alt="humidity">
+                    <span>{{ city.humidity }}%</span>
+                </div>
+                <div class="widget__weather-params-item">
+                    <img class="widget__weather-img" src="../assets/wind-solid.svg" alt="wind speed">
+                    <span>{{ city.wind }} m/s</span>
+                </div>
+            </div>
         </div>
-
-        <div class="widget__temp">
-          <div class="widget__temp-row">
-            <div class="widget__weather-description">{{ city.desc }}</div>
-          </div>
-          <div class="widget__temp-row">
-            <img class="widget__temp-img" :src="getIconSrc(city.icon)" :alt="`${city.desc}`">
-            <div class="widget__display-temp">{{ city.temp }}°</div>
-          </div>
-        </div>
-
-        <div class="widget__weather-params">
-          <div class="widget__weather-params-item">feels like: {{ city.feels_like }}°</div>
-          <div class="widget__weather-params-item">
-            <img class="widget__weather-img" src="../assets/drop-silhouette.png" alt="humidity">
-            <span>{{ city.humidity }}%</span>
-          </div>
-          <div class="widget__weather-params-item">
-            <img class="widget__weather-img" src="../assets/wind-solid.svg" alt="wind speed">
-            <span>{{ city.wind }} m/s</span>
-          </div>
-        </div>
-
-      </template>
     </div>
 
 </template>
