@@ -22,7 +22,7 @@
 <script lang="ts">
 import { useDataURL, useData, useCoords } from './main'
 import { defineComponent, ref, onMounted, computed} from 'vue';
-import Widget from './components/Widget.vue';
+import Widget from './components/AppWidget.vue';
 import WidgetSettings from './components/WidgetSettings.vue';
 
 export default defineComponent({
@@ -41,7 +41,7 @@ export default defineComponent({
 
     const ls = window.localStorage
     const isCoords = ref(lsCoords.getItem("userCoord"))
-    let widgetShow = ref(true)
+    const widgetShow = ref(true)
     const addedCity = ref("")
 
     onMounted(() => {
@@ -52,7 +52,6 @@ export default defineComponent({
     const widgetVisibleToggler = () => widgetShow.value = !widgetShow.value
 
     const checkCoords = () => {
-      // let coords = ls.getItem("userCoord")
       if (isCoords.value !== null) {
         city.value = isCoords.value
         getData(getDataURL(BASE_URL, isCoords.value, API_key))
